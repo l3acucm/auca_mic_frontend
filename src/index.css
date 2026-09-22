@@ -290,6 +290,50 @@ section + section {
   }
 }
 
+.mic-meter {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  width: min(80vw, 320px);
+}
+
+.mic-meter-track {
+  position: relative;
+  width: 100%;
+  height: 10px;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  background: #fff;
+  overflow: hidden;
+}
+
+.mic-meter-fill {
+  height: 100%;
+  background: var(--accent);
+  /* Volume changes fast; a short transition keeps it legible without jitter. */
+  transition: width 60ms linear;
+}
+
+.mic-meter-target {
+  position: absolute;
+  top: -2px;
+  bottom: -2px;
+  width: 2px;
+  background: var(--ink-muted);
+}
+
+.mic-meter-hint {
+  font-size: 0.85rem;
+  color: var(--ink-muted);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mic-meter-fill {
+    transition: none;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .mic-dot {
     animation: none;

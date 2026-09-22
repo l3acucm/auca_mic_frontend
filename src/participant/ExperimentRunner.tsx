@@ -2,9 +2,25 @@ import { useEffect, useRef, useState } from 'react'
 import { postTrial } from '../api/public'
 import { strings } from './i18n'
 import { createRecognition, isSpeechRecognitionSupported } from './speechRecognition'
+import { useMicLevel } from './useMicLevel'
 import type { PublicSessionState, TrialEvent } from '../types'
 
 const TIMEOUT_MS = 5000
+// Approximate "you're loud enough" mark — not the engine's real threshold
+// (browsers don't expose one), just a visual reference point for the meter.
+const MIC_LEVEL_TARGET = 0.3
+
+function MicLevelMeter({ level, hint }: { level: number; hint: string }) {
+  return (
+    <div className="mic-meter" role="img" aria-label={hint} title={hint}>
+      <div className="mic-meter-track">
+        <div className="mic-meter-fill" style={{ width: `${Math.round(level * 100)}%` }} />
+        <div className="mic-meter-target" style={{ left: `${MIC_LEVEL_TARGET * 100}%` }} />
+      </div>
+      <span className="mic-meter-hint">{hint}</span>
+    </div>
+  )
+}
 
 interface Props {
   session: PublicSessionState
@@ -18,6 +34,7 @@ interface Props {
 export function ExperimentRunner({ session, onFinished }: Props) {
   const [index, setIndex] = useState(0)
   const [listening, setListening] = useState(false)
+  const micLevel = useMicLevel()
   const t = strings[session.language]
 
   const tStimulusRef = useRef<Date>(new Date())
@@ -137,6 +154,7 @@ export function ExperimentRunner({ session, onFinished }: Props) {
       <p className="instruction">
         {t.instruction} {listening && <span className="mic-dot" aria-hidden />}
       </p>
+      <MicLevelMeter level={micLevel} hint={t.micLevelHint} />
       <button type="button" className="btn-secondary" onClick={handleDontKnow}>
         {t.dontKnow}
       </button>
