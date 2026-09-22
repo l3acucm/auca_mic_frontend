@@ -1,11 +1,21 @@
 import { useEffect, useState } from 'react'
 
+export type MicLevelStatus = 'requesting' | 'active' | 'error'
+
+interface MicLevelState {
+  level: number
+  status: MicLevelStatus
+  errorMessage: string
+}
+
 /** Live microphone input level (0-1), via a separate getUserMedia + AnalyserNode
  * pipeline — the Web Speech API itself exposes no volume/threshold data, only
  * events (onspeechstart/onresult/onerror), so this is a best-effort visual
  * indicator, not the engine's actual speech-detection signal. */
-export function useMicLevel(): number {
-  const [level, setLevel] = useState(0)
+export function useMicLevel(): MicLevelState {
+  const [state, setState] = useState<MicLevelState>({
+    level: 0, status: 'requesting', errorMessage: '',
+  })
 
   useEffect(() => {
     let stream: MediaStream | null = null
@@ -31,7 +41,12 @@ export function useMicLevel(): number {
         const analyser = audioCtx.createAnalyser()
         analyser.fftSize = 512
         source.connect(analyser)
-        const data = new Uint8Array(analyser.frequencyBinCount)
+        // getByteTimeDomainData wants a buffer sized to fftSize, NOT
+        // frequencyBinCount (fftSize/2) — the previous version passed a
+        // half-sized buffer, silently truncating the waveform it read.
+        const data = new Uint8Array(analyser.fftSize)
+
+        setState((prev) => ({ ...prev, status: 'active' }))
 
         const tick = () => {
           analyser.getByteTimeDomainData(data)
@@ -43,16 +58,17 @@ export function useMicLevel(): number {
           const rms = Math.sqrt(sumSquares / data.length)
           // ponytail: x4 is a rough heuristic so normal speaking volume fills
           // a legible chunk of the meter — tune here if it reads too hot/cold.
-          setLevel(Math.min(1, rms * 4))
+          setState((prev) => ({ ...prev, level: Math.min(1, rms * 4) }))
           raf = requestAnimationFrame(tick)
         }
         tick()
       })
       .catch((err) => {
-        // Mic denied/unavailable — meter stays at 0. SpeechRecognition surfaces
-        // its own failure via onerror; logged here since it was silently
-        // swallowed before and made this exact failure mode invisible.
         console.error('mic level meter: getUserMedia failed', err)
+        setState({
+          level: 0, status: 'error',
+          errorMessage: `${err?.name ?? 'Error'}: ${err?.message ?? String(err)}`,
+        })
       })
 
     return () => {
@@ -63,5 +79,5 @@ export function useMicLevel(): number {
     }
   }, [])
 
-  return level
+  return state
 }

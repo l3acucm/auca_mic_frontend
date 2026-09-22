@@ -328,6 +328,10 @@ section + section {
   color: var(--ink-muted);
 }
 
+.mic-meter-hint.error {
+  color: var(--error);
+}
+
 @media (prefers-reduced-motion: reduce) {
   .mic-meter-fill {
     transition: none;
