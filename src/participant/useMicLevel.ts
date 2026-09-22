@@ -22,6 +22,11 @@ export function useMicLevel(): number {
         }
         stream = s
         audioCtx = new AudioContext()
+        // Browsers create a new AudioContext in "suspended" state unless it's
+        // resumed as part of a user gesture — without this, the graph never
+        // actually processes audio and the meter stays flat at 0 forever,
+        // even while the mic is picking up sound.
+        if (audioCtx.state === 'suspended') audioCtx.resume().catch(() => {})
         const source = audioCtx.createMediaStreamSource(s)
         const analyser = audioCtx.createAnalyser()
         analyser.fftSize = 512
@@ -43,9 +48,11 @@ export function useMicLevel(): number {
         }
         tick()
       })
-      .catch(() => {
+      .catch((err) => {
         // Mic denied/unavailable — meter stays at 0. SpeechRecognition surfaces
-        // its own failure via onerror; nothing else to do here.
+        // its own failure via onerror; logged here since it was silently
+        // swallowed before and made this exact failure mode invisible.
+        console.error('mic level meter: getUserMedia failed', err)
       })
 
     return () => {
