@@ -17,6 +17,16 @@ export interface StimulusSet {
   created_at: string
 }
 
+export interface StimulusItem {
+  filename: string
+  answers: string[]
+  url: string
+}
+
+export interface StimulusSetDetail extends StimulusSet {
+  stimuli: StimulusItem[]
+}
+
 export type Language = 'ru' | 'en'
 export type ExperimentStatus = 'active' | 'archived'
 

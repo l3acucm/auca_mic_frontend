@@ -1,14 +1,26 @@
 import { api, unwrap } from './client'
-import type { Experiment, Language, Paginated, Session, StimulusSet } from '../types'
+import type { Experiment, Language, Paginated, Session, StimulusSet, StimulusSetDetail } from '../types'
 
-export async function uploadStimulusSet(archive: File, name: string): Promise<StimulusSet> {
+export async function createStimulusSet(name: string): Promise<StimulusSetDetail> {
+  const res = await api.post('/experiments/stimulus-sets/', { name })
+  return unwrap<StimulusSetDetail>(res)
+}
+
+export async function getStimulusSet(id: string): Promise<StimulusSetDetail> {
+  const res = await api.get(`/experiments/stimulus-sets/${id}/`)
+  return unwrap<StimulusSetDetail>(res)
+}
+
+export async function addStimulus(
+  stimulusSetId: string, image: File, answers: string,
+): Promise<StimulusSetDetail> {
   const form = new FormData()
-  form.append('archive', archive)
-  if (name) form.append('name', name)
-  const res = await api.post('/experiments/stimulus-sets/', form, {
+  form.append('image', image)
+  form.append('answers', answers)
+  const res = await api.post(`/experiments/stimulus-sets/${stimulusSetId}/stimuli/`, form, {
     headers: { 'Content-Type': 'multipart/form-data' },
   })
-  return unwrap<StimulusSet>(res)
+  return unwrap<StimulusSetDetail>(res)
 }
 
 export async function listStimulusSets(): Promise<StimulusSet[]> {
