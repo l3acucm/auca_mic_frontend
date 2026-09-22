@@ -1,0 +1,9 @@
+node_modules/
+dist/
+.env
+.env.production
+.cf-deploy.env
+*.tsbuildinfo
+.idea/
+.DS_Store
+.wrangler/

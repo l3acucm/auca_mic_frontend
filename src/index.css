@@ -1,0 +1,314 @@
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap');
+
+:root {
+  --paper: #f7f6f2;
+  --ink: #1e2321;
+  --ink-muted: #6b6a63;
+  --line: #d9d4c9;
+  --accent: #2b5c57;
+  --accent-ink: #f7f6f2;
+  --error: #a6412e;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+}
+
+body {
+  font-family: 'IBM Plex Sans', system-ui, sans-serif;
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+h1,
+h2 {
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  margin: 0 0 0.4em;
+}
+
+.eyebrow {
+  font-size: 0.9rem;
+  color: var(--ink-muted);
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+  color: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* ---- Buttons ---- */
+
+.btn-primary,
+.btn-secondary {
+  border-radius: 3px;
+  padding: 0.6em 1.4em;
+  border: 1px solid var(--accent);
+  font-weight: 500;
+}
+
+.btn-primary {
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+
+.btn-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-secondary {
+  background: transparent;
+  color: var(--accent);
+}
+
+.btn-link {
+  background: none;
+  border: none;
+  padding: 0;
+  color: var(--accent);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  font-size: 0.95rem;
+}
+
+.error {
+  color: var(--error);
+}
+
+/* ---- Auth / participant screens: centered instrument card ---- */
+
+.auth {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.auth-card {
+  max-width: 420px;
+  width: 100%;
+  padding: 40px 32px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: #fff;
+}
+
+.auth-title {
+  font-size: 1.5rem;
+}
+
+.auth-sub {
+  color: var(--ink-muted);
+  max-width: 42ch;
+}
+
+.phone-form,
+.stack-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.phone-form label {
+  font-size: 0.9rem;
+  color: var(--ink-muted);
+}
+
+.phone-form input,
+.stack-form input,
+.stack-form textarea,
+.inline-form input,
+.inline-form select {
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  padding: 0.55em 0.75em;
+  background: #fff;
+}
+
+.stack-form textarea {
+  min-height: 4.5em;
+  resize: vertical;
+}
+
+/* ---- Researcher dashboard ---- */
+
+.dashboard-header {
+  display: flex;
+  align-items: center;
+  gap: 28px;
+  padding: 18px 28px;
+  border-bottom: 1px solid var(--line);
+}
+
+.dashboard-header nav {
+  display: flex;
+  gap: 20px;
+  flex: 1;
+}
+
+.tab {
+  background: none;
+  border: none;
+  padding: 4px 0;
+  border-bottom: 2px solid transparent;
+  color: var(--ink-muted);
+}
+
+.tab.active {
+  color: var(--ink);
+  border-bottom-color: var(--accent);
+}
+
+main {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 32px 24px 64px;
+}
+
+section + section {
+  margin-top: 40px;
+}
+
+.inline-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  margin: 16px 0;
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 16px;
+  font-size: 0.95rem;
+}
+
+.data-table th,
+.data-table td {
+  text-align: left;
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--line);
+}
+
+.data-table th {
+  color: var(--ink-muted);
+  font-weight: 500;
+}
+
+.data-table td:nth-child(n + 2) {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.9rem;
+}
+
+.data-table.nested {
+  margin-top: 0;
+  background: var(--paper);
+}
+
+.session-url {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.85rem;
+  word-break: break-all;
+}
+
+/* ---- Participant experiment runner ---- */
+
+.runner {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  padding: 24px;
+  text-align: center;
+}
+
+.progress {
+  font-family: 'IBM Plex Mono', monospace;
+  color: var(--ink-muted);
+}
+
+.stimulus-image {
+  max-width: min(80vw, 480px);
+  max-height: 55vh;
+  object-fit: contain;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: #fff;
+}
+
+.instruction {
+  font-size: 1.1rem;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.mic-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--accent);
+  animation: pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 0.35;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mic-dot {
+    animation: none;
+  }
+}
+
+.runner-error {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  text-align: center;
+  color: var(--error);
+}
+
+@media (max-width: 640px) {
+  .dashboard-header {
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+}
