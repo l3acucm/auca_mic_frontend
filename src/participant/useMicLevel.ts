@@ -24,7 +24,15 @@ export function useMicLevel(): MicLevelState {
     let cancelled = false
 
     navigator.mediaDevices
-      .getUserMedia({ audio: true })
+      // Speech recognition captures the mic independently and internally —
+      // running our own processed (echo-cancelled/AGC'd) stream at the same
+      // time can starve or distort what the recognizer receives on some
+      // Chrome builds. Request raw, unprocessed audio to avoid contending
+      // with it (this was the likely cause of every trial hitting the 5s
+      // timeout: recognition never got a usable signal while this ran).
+      .getUserMedia({
+        audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false },
+      })
       .then((s) => {
         if (cancelled) {
           s.getTracks().forEach((t) => t.stop())

@@ -1,6 +1,7 @@
 import { Fragment, useEffect, useState } from 'react'
 import { downloadExperimentExport, getResult, listResults, saveBlob } from '../api/results'
 import { listExperiments } from '../api/experiments'
+import { formatApiDate } from '../utils/date'
 import type { Experiment, ResultDetail, ResultRow } from '../types'
 
 export function ResultsPanel() {
@@ -77,7 +78,7 @@ export function ResultsPanel() {
             <Fragment key={r.id}>
               <tr>
                 <td>{r.participant_id}</td>
-                <td>{new Date(r.completed_at).toLocaleString()}</td>
+                <td>{formatApiDate(r.completed_at)}</td>
                 <td>{r.total_time_sec.toFixed(2)}</td>
                 <td>{r.num_correct}</td>
                 <td>{r.num_incorrect}</td>

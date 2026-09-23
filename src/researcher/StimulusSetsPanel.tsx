@@ -1,6 +1,7 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { addStimulus, createStimulusSet, getStimulusSet, listStimulusSets } from '../api/experiments'
 import { extractErrorCode } from '../api/client'
+import { formatApiDate } from '../utils/date'
 import type { StimulusSet, StimulusSetDetail } from '../types'
 
 export function StimulusSetsPanel({ onChanged }: { onChanged?: () => void }) {
@@ -129,7 +130,7 @@ export function StimulusSetsPanel({ onChanged }: { onChanged?: () => void }) {
             <tr key={s.id}>
               <td>{s.name || '—'}</td>
               <td>{s.stimulus_count}</td>
-              <td>{new Date(s.created_at).toLocaleString()}</td>
+              <td>{formatApiDate(s.created_at)}</td>
               <td>
                 <button type="button" className="btn-link" onClick={() => openSet(s.id)}>
                   Открыть / дополнить
