@@ -1,6 +1,7 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import {
   archiveExperiment, createExperiment, listExperiments, listStimulusSets, startSession,
+  unarchiveExperiment,
 } from '../api/experiments'
 import { extractErrorCode } from '../api/client'
 import type { Experiment, Language, Session, StimulusSet } from '../types'
@@ -49,7 +50,13 @@ export function ExperimentsPanel({ refreshKey }: { refreshKey: number }) {
   }
 
   async function handleArchive(id: string) {
+    if (!window.confirm('Архивировать этот эксперимент?')) return
     await archiveExperiment(id)
+    refresh()
+  }
+
+  async function handleUnarchive(id: string) {
+    await unarchiveExperiment(id)
     refresh()
   }
 
@@ -106,14 +113,29 @@ export function ExperimentsPanel({ refreshKey }: { refreshKey: number }) {
               <td>{exp.num_trials}</td>
               <td>
                 {exp.status === 'active' ? (
-                  <button type="button" className="btn-link" onClick={() => handleArchive(exp.id)}>
-                    активен (архивировать)
-                  </button>
-                ) : 'архивирован'}
+                  <>
+                    активен{' '}
+                    <button type="button" className="btn-link" onClick={() => handleArchive(exp.id)}>
+                      архивировать
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    архивирован{' '}
+                    <button type="button" className="btn-link" onClick={() => handleUnarchive(exp.id)}>
+                      вернуть
+                    </button>
+                  </>
+                )}
               </td>
               <td>
                 {sessions[exp.id] ? (
-                  <code className="session-url">{sessions[exp.id].session_url}</code>
+                  <a
+                    href={sessions[exp.id].session_url} target="_blank" rel="noreferrer"
+                    className="session-url"
+                  >
+                    {sessions[exp.id].session_url}
+                  </a>
                 ) : (
                   <div className="inline-form">
                     <input

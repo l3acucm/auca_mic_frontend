@@ -59,6 +59,11 @@ export async function archiveExperiment(id: string): Promise<Experiment> {
   return unwrap<Experiment>(res)
 }
 
+export async function unarchiveExperiment(id: string): Promise<Experiment> {
+  const res = await api.post(`/experiments/experiments/${id}/unarchive/`)
+  return unwrap<Experiment>(res)
+}
+
 export async function startSession(experimentId: string, participantId?: string): Promise<Session> {
   const res = await api.post(`/experiments/experiments/${experimentId}/start-session/`, {
     participant_id: participantId || '',
