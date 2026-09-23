@@ -27,12 +27,19 @@ export function ExperimentRunner({ session, onFinished }: Props) {
   const respondedRef = useRef(false)
   const recognitionRef = useRef<SpeechRecognitionLike | null>(null)
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  // Trial POSTs are fire-and-forget so the next stimulus isn't delayed by the
+  // network (BRD 3.6) — but /complete/ must not run until every /trials/ call
+  // has actually landed, or it aggregates whatever trial_data happened to be
+  // saved at that instant (a real race: the last trial's POST could still be
+  // in flight when /complete/ fires, producing a result with 0 trials even
+  // though the session's trial_data ends up correct moments later).
+  const pendingTrialsRef = useRef<Promise<unknown>[]>([])
 
   const stimulus = session.stimuli[index]
 
   useEffect(() => {
     if (index >= session.stimuli.length) {
-      onFinished()
+      Promise.allSettled(pendingTrialsRef.current).then(onFinished)
       return
     }
 
@@ -75,15 +82,17 @@ export function ExperimentRunner({ session, onFinished }: Props) {
         /* already stopped */
       }
       const reactionTimeSec = Math.max(0, (tEnd.getTime() - tStimulusRef.current.getTime()) / 1000)
-      postTrial(session.id, {
-        stimulus_filename: stimulus.filename,
-        reaction_time_sec: reactionTimeSec,
-        event,
-        timestamp_stimulus: tStimulusRef.current.toISOString(),
-        timestamp_speech_start: event === 'recognized' ? tEnd.toISOString() : null,
-      }).catch(() => {
-        /* best-effort — the attempt continues even if one trial fails to save */
-      })
+      pendingTrialsRef.current.push(
+        postTrial(session.id, {
+          stimulus_filename: stimulus.filename,
+          reaction_time_sec: reactionTimeSec,
+          event,
+          timestamp_stimulus: tStimulusRef.current.toISOString(),
+          timestamp_speech_start: event === 'recognized' ? tEnd.toISOString() : null,
+        }).catch(() => {
+          /* best-effort — the attempt continues even if one trial fails to save */
+        }),
+      )
       setIndex((i) => i + 1)
     }
 
@@ -110,13 +119,15 @@ export function ExperimentRunner({ session, onFinished }: Props) {
     }
     const tSkip = new Date()
     const reactionTimeSec = Math.max(0, (tSkip.getTime() - tStimulusRef.current.getTime()) / 1000)
-    postTrial(session.id, {
-      stimulus_filename: stimulus.filename,
-      reaction_time_sec: reactionTimeSec,
-      event: 'skipped',
-      timestamp_stimulus: tStimulusRef.current.toISOString(),
-      timestamp_speech_start: null,
-    }).catch(() => {})
+    pendingTrialsRef.current.push(
+      postTrial(session.id, {
+        stimulus_filename: stimulus.filename,
+        reaction_time_sec: reactionTimeSec,
+        event: 'skipped',
+        timestamp_stimulus: tStimulusRef.current.toISOString(),
+        timestamp_speech_start: null,
+      }).catch(() => {}),
+    )
     setIndex((i) => i + 1)
   }
 
