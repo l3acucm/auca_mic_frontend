@@ -67,22 +67,37 @@ export function ExperimentRunner({ session, onFinished }: Props) {
 
     const recognition = createRecognition(session.language)
     recognitionRef.current = recognition
+    // Temporary diagnostics: SpeechRecognition has been silently hitting the
+    // 5s failsafe with no onresult/onerror at all — logging the full
+    // lifecycle so the next report shows exactly what (if anything) fires.
+    console.log('[speech] starting recognition for', stimulus.filename, 'lang=', session.language)
 
     recognition.onspeechstart = () => {
+      console.log('[speech] onspeechstart')
       tVoiceRef.current = new Date()
     }
     recognition.onresult = (event) => {
-      if (respondedRef.current) return
       const transcript = event.results[0]?.[0]?.transcript ?? ''
+      console.log('[speech] onresult:', transcript)
+      if (respondedRef.current) return
       finish('recognized', transcript, tVoiceRef.current ?? new Date())
     }
-    recognition.onerror = () => {
+    recognition.onerror = (event) => {
+      console.log('[speech] onerror:', event.error)
       if (respondedRef.current) return
       finish('speech_error', '', new Date())
     }
-    recognition.start()
+    recognition.onend = () => {
+      console.log('[speech] onend')
+    }
+    try {
+      recognition.start()
+    } catch (err) {
+      console.log('[speech] start() threw:', err)
+    }
 
     timerRef.current = setTimeout(() => {
+      console.log('[speech] hit 5s failsafe timeout')
       if (respondedRef.current) return
       finish('timeout', '', new Date())
     }, TIMEOUT_MS)
