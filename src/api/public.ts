@@ -9,7 +9,6 @@ export async function getSession(sessionId: string): Promise<PublicSessionState>
 export interface TrialInput {
   stimulus_filename: string
   reaction_time_sec: number
-  recognized_text: string
   event: TrialEvent
   timestamp_stimulus: string
   timestamp_speech_start: string | null

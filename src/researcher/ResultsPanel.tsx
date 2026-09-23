@@ -96,7 +96,7 @@ export function ResultsPanel() {
                   <td colSpan={8}>
                     <table className="data-table nested">
                       <thead>
-                        <tr><th>Стимул</th><th>Время реакции</th><th>Код</th><th>Текст</th></tr>
+                        <tr><th>Стимул</th><th>Время реакции</th><th>Код</th></tr>
                       </thead>
                       <tbody>
                         {detail.trial_data.map((trial, i) => (
@@ -104,7 +104,6 @@ export function ResultsPanel() {
                             <td>{trial.stimulus_filename}</td>
                             <td>{trial.reaction_time_sec.toFixed(3)}</td>
                             <td>{trial.code}</td>
-                            <td>{trial.recognized_text}</td>
                           </tr>
                         ))}
                       </tbody>

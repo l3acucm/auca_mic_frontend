@@ -36,10 +36,13 @@ interface Props {
   onFinished: () => void
 }
 
-/** Runs one stimulus at a time (BRD module 3): shows the image, listens via
- * Web Speech API, and advances the instant an answer/skip/timeout happens —
- * scoring happens server-side, asynchronously, and never blocks the advance
- * (BRD 3.6). */
+/** Runs one stimulus at a time (BRD module 3): shows the image and measures
+ * reaction time as stimulus-shown -> onspeechstart. `onspeechstart` is local
+ * voice-activity detection (no network round trip), unlike the transcript
+ * from `onresult` — which needs Chrome's cloud recognition backend and, in
+ * practice, silently produced no result at all (blocked/unreachable network
+ * path). We stopped waiting on it: no transcript is captured, and "did the
+ * participant respond" is the only signal recorded (see BRD changelog). */
 export function ExperimentRunner({ session, onFinished }: Props) {
   const [index, setIndex] = useState(0)
   const [listening, setListening] = useState(false)
@@ -47,7 +50,6 @@ export function ExperimentRunner({ session, onFinished }: Props) {
   const t = strings[session.language]
 
   const tStimulusRef = useRef<Date>(new Date())
-  const tVoiceRef = useRef<Date | null>(null)
   const respondedRef = useRef(false)
   const recognitionRef = useRef<SpeechRecognitionLike | null>(null)
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -61,48 +63,34 @@ export function ExperimentRunner({ session, onFinished }: Props) {
     }
 
     tStimulusRef.current = new Date()
-    tVoiceRef.current = null
     respondedRef.current = false
     setListening(true)
 
     const recognition = createRecognition(session.language)
     recognitionRef.current = recognition
-    // Temporary diagnostics: SpeechRecognition has been silently hitting the
-    // 5s failsafe with no onresult/onerror at all — logging the full
-    // lifecycle so the next report shows exactly what (if anything) fires.
-    console.log('[speech] starting recognition for', stimulus.filename, 'lang=', session.language)
 
     recognition.onspeechstart = () => {
-      console.log('[speech] onspeechstart')
-      tVoiceRef.current = new Date()
+      finish('recognized', new Date())
     }
-    recognition.onresult = (event) => {
-      const transcript = event.results[0]?.[0]?.transcript ?? ''
-      console.log('[speech] onresult:', transcript)
-      if (respondedRef.current) return
-      finish('recognized', transcript, tVoiceRef.current ?? new Date())
-    }
-    recognition.onerror = (event) => {
-      console.log('[speech] onerror:', event.error)
-      if (respondedRef.current) return
-      finish('speech_error', '', new Date())
+    recognition.onerror = () => {
+      finish('speech_error', new Date())
     }
     recognition.onend = () => {
-      console.log('[speech] onend')
+      // Recognition can end on its own (silence) without onspeechstart or
+      // onerror ever firing — treat that the same as a recognition failure
+      // instead of waiting out the rest of the 5s failsafe.
+      finish('speech_error', new Date())
     }
     try {
       recognition.start()
-    } catch (err) {
-      console.log('[speech] start() threw:', err)
+    } catch {
+      finish('speech_error', new Date())
     }
 
-    timerRef.current = setTimeout(() => {
-      console.log('[speech] hit 5s failsafe timeout')
-      if (respondedRef.current) return
-      finish('timeout', '', new Date())
-    }, TIMEOUT_MS)
+    timerRef.current = setTimeout(() => finish('timeout', new Date()), TIMEOUT_MS)
 
-    function finish(event: TrialEvent, recognizedText: string, tEnd: Date) {
+    function finish(event: TrialEvent, tEnd: Date) {
+      if (respondedRef.current) return
       respondedRef.current = true
       setListening(false)
       if (timerRef.current) clearTimeout(timerRef.current)
@@ -115,7 +103,6 @@ export function ExperimentRunner({ session, onFinished }: Props) {
       postTrial(session.id, {
         stimulus_filename: stimulus.filename,
         reaction_time_sec: reactionTimeSec,
-        recognized_text: recognizedText,
         event,
         timestamp_stimulus: tStimulusRef.current.toISOString(),
         timestamp_speech_start: event === 'recognized' ? tEnd.toISOString() : null,
@@ -151,7 +138,6 @@ export function ExperimentRunner({ session, onFinished }: Props) {
     postTrial(session.id, {
       stimulus_filename: stimulus.filename,
       reaction_time_sec: reactionTimeSec,
-      recognized_text: '',
       event: 'skipped',
       timestamp_stimulus: tStimulusRef.current.toISOString(),
       timestamp_speech_start: null,

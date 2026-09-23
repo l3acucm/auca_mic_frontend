@@ -68,7 +68,6 @@ export interface Trial {
   stimulus_filename: string
   reaction_time_sec: number
   code: 0 | 1 | 2 | 3
-  recognized_text: string
   timestamp_stimulus: string
   timestamp_speech_start: string | null
 }
