@@ -2,34 +2,9 @@ import { useEffect, useRef, useState } from 'react'
 import { postTrial } from '../api/public'
 import { strings } from './i18n'
 import { createRecognition, isSpeechRecognitionSupported } from './speechRecognition'
-import { useMicLevel } from './useMicLevel'
 import type { PublicSessionState, TrialEvent } from '../types'
 
 const TIMEOUT_MS = 5000
-// Approximate "you're loud enough" mark — not the engine's real threshold
-// (browsers don't expose one), just a visual reference point for the meter.
-const MIC_LEVEL_TARGET = 0.12
-
-function MicLevelMeter({
-  level, status, errorMessage, hint,
-}: { level: number; status: 'requesting' | 'active' | 'error'; errorMessage: string; hint: string }) {
-  const statusText =
-    status === 'requesting' ? 'Запрашиваю доступ к микрофону…'
-    : status === 'error' ? `Микрофон недоступен: ${errorMessage}`
-    : `${hint} (${Math.round(level * 100)}%)`
-
-  return (
-    <div className="mic-meter" role="img" aria-label={hint} title={hint}>
-      <div className="mic-meter-track">
-        <div className="mic-meter-fill" style={{ width: `${Math.round(level * 100)}%` }} />
-        <div className="mic-meter-target" style={{ left: `${MIC_LEVEL_TARGET * 100}%` }} />
-      </div>
-      <span className={status === 'error' ? 'mic-meter-hint error' : 'mic-meter-hint'}>
-        {statusText}
-      </span>
-    </div>
-  )
-}
 
 interface Props {
   session: PublicSessionState
@@ -46,7 +21,6 @@ interface Props {
 export function ExperimentRunner({ session, onFinished }: Props) {
   const [index, setIndex] = useState(0)
   const [listening, setListening] = useState(false)
-  const mic = useMicLevel()
   const t = strings[session.language]
 
   const tStimulusRef = useRef<Date>(new Date())
@@ -92,6 +66,7 @@ export function ExperimentRunner({ session, onFinished }: Props) {
     function finish(event: TrialEvent, tEnd: Date) {
       if (respondedRef.current) return
       respondedRef.current = true
+      console.log('[speech]', stimulus.filename, '->', event)
       setListening(false)
       if (timerRef.current) clearTimeout(timerRef.current)
       try {
@@ -164,9 +139,6 @@ export function ExperimentRunner({ session, onFinished }: Props) {
       <p className="instruction">
         {t.instruction} {listening && <span className="mic-dot" aria-hidden />}
       </p>
-      <MicLevelMeter
-        level={mic.level} status={mic.status} errorMessage={mic.errorMessage} hint={t.micLevelHint}
-      />
       <button type="button" className="btn-secondary" onClick={handleDontKnow}>
         {t.dontKnow}
       </button>
